@@ -1,0 +1,46 @@
+{
+  "name": "karakeep-semantic-search",
+  "version": "0.1.0",
+  "description": "Semantic search sidecar for Karakeep bookmarks",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts --format esm --dts",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.12.0",
+    "hono": "^4.6.0",
+    "openai": "^4.70.0",
+    "ollama": "^0.5.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamesbrooksco/karakeep-semantic-search"
+  },
+  "keywords": [
+    "karakeep",
+    "hoarder",
+    "bookmarks",
+    "semantic-search",
+    "vector-search",
+    "qdrant"
+  ],
+  "author": "James Brooks",
+  "license": "MIT"
+}
