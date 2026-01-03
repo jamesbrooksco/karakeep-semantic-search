@@ -155,7 +155,7 @@ async function main(): Promise<void> {
 
   // Start server
   const { serve } = await import("@hono/node-server");
-  serve({ fetch: app.fetch, port: config.PORT });
+  serve({ fetch: app.fetch, port: config.PORT, hostname: "0.0.0.0" });
 
   logger.info(`🚀 Server running on port ${config.PORT}`);
 }
