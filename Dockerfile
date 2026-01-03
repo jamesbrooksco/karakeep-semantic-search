@@ -9,17 +9,17 @@ RUN pnpm install --frozen-lockfile || pnpm install
 COPY . .
 RUN pnpm build
 
-# Final stage - combine Qdrant + App
-FROM qdrant/qdrant:latest AS qdrant
+# Final stage - use Qdrant as base and add Node
+FROM qdrant/qdrant:v1.13.2
 
-FROM node:22-alpine AS runner
-
-# Install curl for healthchecks and supervisor for process management
-RUN apk add --no-cache curl supervisor
-
-# Copy Qdrant binary and config from official image
-COPY --from=qdrant /qdrant/qdrant /usr/local/bin/qdrant
-COPY --from=qdrant /qdrant/config /qdrant/config
+# Install Node.js and supervisor
+RUN apt-get update && apt-get install -y \
+    curl \
+    supervisor \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Setup app
 WORKDIR /app
@@ -27,42 +27,39 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 
-# Supervisor config to run both processes
-RUN mkdir -p /etc/supervisor.d
-COPY <<EOF /etc/supervisor.d/services.ini
-[supervisord]
-nodaemon=true
-user=root
+# Supervisor config
+RUN mkdir -p /etc/supervisor/conf.d
+RUN echo '[supervisord]\n\
+nodaemon=true\n\
+user=root\n\
+\n\
+[program:qdrant]\n\
+command=/qdrant/qdrant\n\
+directory=/qdrant\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n\
+stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0\n\
+\n\
+[program:app]\n\
+command=/usr/bin/node /app/dist/index.js\n\
+directory=/app\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n\
+stderr_logfile=/dev/stderr\n\
+stderr_logfile_maxbytes=0\n\
+startretries=10\n\
+startsecs=3\n\
+' > /etc/supervisor/conf.d/services.conf
 
-[program:qdrant]
-command=/usr/local/bin/qdrant
-directory=/qdrant
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-
-[program:app]
-command=node /app/dist/index.js
-directory=/app
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-startsecs=5
-EOF
-
-# Qdrant data volume
-VOLUME /qdrant/storage
-
-# Expose ports: 3000 for API, 6333 for Qdrant (optional direct access)
+# Expose ports
 EXPOSE 3000 6333
 
 ENV NODE_ENV=production
 ENV QDRANT_URL=http://localhost:6333
 
-CMD ["supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
