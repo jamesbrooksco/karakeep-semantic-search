@@ -90,35 +90,37 @@ GET /health
                     └─────────────────┘
 ```
 
-## Adding to existing Karakeep docker-compose
+## Adding to Unraid / Docker
+
+**Single container** - Qdrant is bundled inside, no separate database needed!
 
 ```yaml
 services:
-  # ... your existing karakeep services ...
-
   karakeep-semantic:
     image: ghcr.io/jamesbrooksco/karakeep-semantic-search:latest
     environment:
-      - KARAKEEP_URL=http://karakeep:3000
-      - KARAKEEP_API_KEY=${KARAKEEP_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - QDRANT_URL=http://qdrant:6333
-    depends_on:
-      - karakeep
-      - qdrant
+      - KARAKEEP_URL=http://your-karakeep-ip:3000
+      - KARAKEEP_API_KEY=your-api-key
+      - OPENAI_API_KEY=sk-your-key
     ports:
       - "3001:3000"
-
-  qdrant:
-    image: qdrant/qdrant:latest
     volumes:
-      - qdrant_data:/qdrant/storage
-    ports:
-      - "6333:6333"
+      - karakeep_semantic_data:/qdrant/storage
 
 volumes:
-  qdrant_data:
+  karakeep_semantic_data:
 ```
+
+### Unraid Setup
+
+1. Add container from Docker Hub / ghcr.io
+2. **Repository:** `ghcr.io/jamesbrooksco/karakeep-semantic-search:latest`
+3. **Port:** 3001 → 3000
+4. **Path:** `/qdrant/storage` → `/mnt/user/appdata/karakeep-semantic`
+5. **Variables:**
+   - `KARAKEEP_URL` = your Karakeep URL
+   - `KARAKEEP_API_KEY` = from Karakeep settings
+   - `OPENAI_API_KEY` = your OpenAI key
 
 ## Local Development
 
