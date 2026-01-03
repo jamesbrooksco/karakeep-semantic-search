@@ -1,7 +1,14 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { createHash } from "crypto";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
 import { embeddingProvider } from "./embeddings.js";
+
+// Convert string ID to UUID format for Qdrant
+function stringToUuid(str: string): string {
+  const hash = createHash("md5").update(str).digest("hex");
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
 
 export interface BookmarkVector {
   id: string;
@@ -25,7 +32,7 @@ class VectorDB {
   private initialized = false;
 
   constructor() {
-    this.client = new QdrantClient({ url: config.QDRANT_URL });
+    this.client = new QdrantClient({ url: config.QDRANT_URL, checkCompatibility: false });
     this.collection = config.QDRANT_COLLECTION;
   }
 
@@ -64,9 +71,9 @@ class VectorDB {
       const embeddings = await embeddingProvider.embed(texts);
 
       const points = batch.map((bookmark, idx) => ({
-        id: bookmark.id,
+        id: stringToUuid(bookmark.id),
         vector: embeddings[idx],
-        payload: bookmark.metadata,
+        payload: { ...bookmark.metadata, bookmarkId: bookmark.id },
       }));
 
       await this.client.upsert(this.collection, {
@@ -87,7 +94,7 @@ class VectorDB {
 
     await this.client.delete(this.collection, {
       wait: true,
-      points: ids,
+      points: ids.map(stringToUuid),
     });
 
     logger.info(`Deleted ${ids.length} vectors`);
