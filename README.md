@@ -138,15 +138,26 @@ pnpm test
 pnpm build
 ```
 
+## Clawdis Integration
+
+A ready-to-use skill is included in the [`skill/`](./skill/) folder. Copy `skill/SKILL.md` to your Clawdis skills directory and update the URL.
+
+## Getting Your Karakeep API Key
+
+1. Open your Karakeep instance
+2. Go to **Settings** → **API Keys**
+3. Create a new API key
+4. Copy it to your `KARAKEEP_API_KEY` environment variable
+
 ## Roadmap
 
 - [x] Basic semantic search
 - [x] Auto-sync from Karakeep
+- [x] Clawdis skill
 - [ ] Webhook support for instant indexing
 - [ ] Hybrid search (semantic + keyword)
 - [ ] "Find similar" bookmarks
 - [ ] Tag/date/domain filtering
-- [ ] Clawdis skill integration
 
 ## License
 
