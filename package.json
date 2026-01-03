@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.0",
     "@qdrant/js-client-rest": "^1.12.0",
     "hono": "^4.6.0",
     "openai": "^4.70.0",

@@ -154,12 +154,8 @@ async function main(): Promise<void> {
   startBackgroundSync();
 
   // Start server
-  const server = Bun?.serve?.({
-    port: config.PORT,
-    fetch: app.fetch,
-  }) ?? await import("@hono/node-server").then(({ serve }) => 
-    serve({ fetch: app.fetch, port: config.PORT })
-  );
+  const { serve } = await import("@hono/node-server");
+  serve({ fetch: app.fetch, port: config.PORT });
 
   logger.info(`🚀 Server running on port ${config.PORT}`);
 }

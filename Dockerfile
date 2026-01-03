@@ -7,8 +7,8 @@ WORKDIR /app
 
 # Dependencies stage
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile || pnpm install
 
 # Build stage
 FROM base AS builder
@@ -17,7 +17,7 @@ COPY . .
 RUN pnpm build
 
 # Production stage
-FROM base AS runner
+FROM node:22-alpine AS runner
 ENV NODE_ENV=production
 
 # Add curl for healthcheck
@@ -25,8 +25,8 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 
 EXPOSE 3000
