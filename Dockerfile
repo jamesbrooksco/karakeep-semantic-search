@@ -27,34 +27,38 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 
-# Supervisor config
-RUN mkdir -p /etc/supervisor/conf.d
-RUN echo '[supervisord]\n\
-nodaemon=true\n\
-user=root\n\
-\n\
-[program:qdrant]\n\
-command=/qdrant/qdrant\n\
-directory=/qdrant\n\
-autostart=true\n\
-autorestart=true\n\
-stdout_logfile=/dev/stdout\n\
-stdout_logfile_maxbytes=0\n\
-stderr_logfile=/dev/stderr\n\
-stderr_logfile_maxbytes=0\n\
-\n\
-[program:app]\n\
-command=/usr/bin/node /app/dist/index.js\n\
-directory=/app\n\
-autostart=true\n\
-autorestart=true\n\
-stdout_logfile=/dev/stdout\n\
-stdout_logfile_maxbytes=0\n\
-stderr_logfile=/dev/stderr\n\
-stderr_logfile_maxbytes=0\n\
-startretries=10\n\
-startsecs=3\n\
-' > /etc/supervisor/conf.d/services.conf
+# Supervisor config - write directly to main config file
+RUN cat > /etc/supervisor/supervisord.conf <<'EOF'
+[supervisord]
+nodaemon=true
+user=root
+logfile=/var/log/supervisor/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:qdrant]
+command=/qdrant/qdrant
+directory=/qdrant
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:app]
+command=/usr/bin/node /app/dist/index.js
+directory=/app
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+startretries=10
+startsecs=3
+EOF
+
+RUN mkdir -p /var/log/supervisor
 
 # Expose ports
 EXPOSE 3000 6333
